@@ -9,10 +9,15 @@ import java.util.List;
 import java.util.Random;
 
 import static org.example.model.GameModel.blockImage;
-import static org.example.model.ItemType.CONG3;
+import static org.example.model.ItemType.FIRE_BALL;
 
 public class Level {
+
     private static final Random random = new Random();
+
+    public static double getTime(int lv) {
+        return 60 * lv;
+    }
 
     public static List<Brick> getListBricks(int lv) {
         return switch (lv) {
@@ -29,8 +34,10 @@ public class Level {
 
     private static List<Brick> getListLevel_Test() {
         List<Brick> bricks = new ArrayList<>();
-        Brick brick = new Brick(430, 10, 60, 20, GameModel.blockImage[0][0]);
-        bricks.add(brick);
+        for (int i = 0; i < 30; i += 3) {
+            Brick brick = new Brick(20 + i * 20, 150, 60, 20, GameModel.blockImage[0][0], new Item(20 + i * 20, 150, FIRE_BALL));
+            bricks.add(brick);
+        }
         return bricks;
     }
 
@@ -44,7 +51,7 @@ public class Level {
                 Brick g;
                 if (random.nextDouble() < dropChance) {
                     g = new Brick(i * 20, j * 20, 60, 20, blockImage[k][3],
-                            new Item(i * 20, j * 20, CONG3));
+                            new Item(i * 20, j * 20, FIRE_BALL));
                 } else {
                     g = new Brick(i * 20, j * 20, 60, 20, blockImage[k][0]);
                 }
@@ -64,7 +71,7 @@ public class Level {
             for (int j = 3; j < 48; j += 3) {
                 Brick g;
                 if (random.nextDouble() < dropChance) {
-                    g = new Brick(j * 20, i * 20, 60, 20, blockImage[k][0], new Item(j * 20, i * 20, CONG3));
+                    g = new Brick(j * 20, i * 20, 60, 20, blockImage[k][0], new Item(j * 20, i * 20, FIRE_BALL));
                 } else {
                     g = new Brick(j * 20, i * 20, 60, 20, blockImage[k][0]);
                 }
@@ -84,7 +91,7 @@ public class Level {
             for (int j = 5; j < 21; j += 2) {
                 Brick g;
                 if (random.nextDouble() < dropChance) {
-                    g = new Brick(i * 20, j * 20, 60, 20, blockImage[0][1], new Item(i * 20, j * 20, CONG3));
+                    g = new Brick(i * 20, j * 20, 60, 20, blockImage[0][1], new Item(i * 20, j * 20, FIRE_BALL));
                 } else {
                     g = new Brick(i * 20, j * 20, 60, 20, blockImage[0][0]);
                 }
@@ -102,7 +109,7 @@ public class Level {
             for (int j = 5; j < 21; j++) {
                 Brick g;
                 if (random.nextDouble() < dropChance) {
-                    g = new Brick(i * 20, j * 20, 60, 20, blockImage[0][0], new Item(i * 20, j * 20, CONG3));
+                    g = new Brick(i * 20, j * 20, 60, 20, blockImage[0][0], new Item(i * 20, j * 20, FIRE_BALL));
                 } else {
                     g = new Brick(i * 20, j * 20, 60, 20, blockImage[0][3]);
                 }
@@ -124,7 +131,7 @@ public class Level {
                 if (dem != 0) {
                     Brick g;
                     if (random.nextDouble() < dropChance) {
-                        g = new Brick(i * 20, j * 20, 60, 20, blockImage[0][1], new Item(i * 20, j * 20, CONG3));
+                        g = new Brick(i * 20, j * 20, 60, 20, blockImage[0][1], new Item(i * 20, j * 20, FIRE_BALL));
                     } else {
                         g = new Brick(i * 20, j * 20, 60, 20, blockImage[0][0]);
                     }
@@ -147,7 +154,7 @@ public class Level {
             for (int j = dem; j < 36 - dem2; j++) {
                 Brick g;
                 if (random.nextDouble() < dropChance) {
-                    g = new Brick(i * 20, j * 20, 60, 20, blockImage[1][1], new Item(i * 20, j * 20, CONG3));
+                    g = new Brick(i * 20, j * 20, 60, 20, blockImage[1][1], new Item(i * 20, j * 20, FIRE_BALL));
                 } else {
                     g = new Brick(i * 20, j * 20, 60, 20, blockImage[1][0]);
                 }
@@ -175,7 +182,7 @@ public class Level {
             for (int j = 3; j < 21; j++) {
                 Brick g;
                 if (random.nextDouble() < dropChance) {
-                    g = new Brick(i * 20, j * 20, 60, 20, blockImage[3][1], new Item(i * 20, j * 20, CONG3));
+                    g = new Brick(i * 20, j * 20, 60, 20, blockImage[3][1], new Item(i * 20, j * 20, FIRE_BALL));
                 } else {
                     g = new Brick(i * 20, j * 20, 60, 20, blockImage[3][0]);
                 }

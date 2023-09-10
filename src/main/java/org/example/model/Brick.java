@@ -12,16 +12,17 @@ public class Brick {
     private int count;
     private Image image;
 
-    private Point upperLeftCorner;
-    private Point upperRightCorner;
-    private Point lowerLeftCorner;
-    private Point lowerRightCorner;
+    private final Point upperLeftCorner;
+    private final Point upperRightCorner;
+    private final Point lowerLeftCorner;
+    private final Point lowerRightCorner;
 
-    public Brick(int x, int y, int width, int height, Image image, Item item) {
+    public Brick(int x, int y, int width, int height, int count, Image image, Item item) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
+        this.count = count;
         this.isVisible = true;
         this.image = image;
 
@@ -33,8 +34,12 @@ public class Brick {
         this.item = item;
     }
 
+    public Brick(int x, int y, int width, int height, Image image, Item item) {
+        this(x, y, width, height, 0, image, item);
+    }
+
     public Brick(int x, int y, int width, int height, Image image) {
-        this(x, y, width, height, image, null);
+        this(x, y, width, height, 0, image, null);
     }
 
     public int getX() {

@@ -13,6 +13,7 @@ public class Ball {
     private BallDirection directionY;
 
     private boolean isVisible;
+    private boolean fireBall;
 
     public Ball(int x, int y, int diameter, int xSpeed, int ySpeed, BallDirection directionX, BallDirection directionY) {
         this.x = x;
@@ -23,6 +24,7 @@ public class Ball {
         this.directionX = directionX;
         this.directionY = directionY;
         this.isVisible = true;
+        this.fireBall = false;
     }
 
     public int getXDraw() {
@@ -157,5 +159,13 @@ public class Ball {
 
     public void setImage(Image image) {
         this.image = image;
+    }
+
+    public boolean isFireBall() {
+        return fireBall;
+    }
+
+    public void setFireBall(boolean fireBall) {
+        this.fireBall = fireBall;
     }
 }

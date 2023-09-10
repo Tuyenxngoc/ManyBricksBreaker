@@ -9,26 +9,10 @@ public class Button {
     private int height;
     private String name;
     private boolean isSelect;
-    private Color color;
-    private Color color2;
     private Image img;
+    private Image img2;
 
-    public Button() {
-    }
-
-    public Button(int x, int y, int width, int height, String name, boolean isSelect, Color color, Color color2, Image img) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.name = name;
-        this.isSelect = isSelect;
-        this.color = color;
-        this.color2 = color2;
-        this.img = img;
-    }
-
-    public Button(int x, int y, int width, int height, String name, boolean isSelect, Image img) {
+    public Button(int x, int y, int width, int height, String name, boolean isSelect, Image img, Image img2) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -36,6 +20,7 @@ public class Button {
         this.name = name;
         this.isSelect = isSelect;
         this.img = img;
+        this.img2 = img2;
     }
 
     public int getX() {
@@ -94,19 +79,11 @@ public class Button {
         this.img = img;
     }
 
-    public Color getColor() {
-        return color;
+    public Image getImg2() {
+        return img2;
     }
 
-    public void setColor(Color color) {
-        this.color = color;
-    }
-
-    public Color getColor2() {
-        return color2;
-    }
-
-    public void setColor2(Color color2) {
-        this.color2 = color2;
+    public void setImg2(Image img2) {
+        this.img2 = img2;
     }
 }

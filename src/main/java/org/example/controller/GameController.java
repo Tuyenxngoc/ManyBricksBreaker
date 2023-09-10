@@ -17,6 +17,7 @@ import static org.example.model.GameModel.*;
 
 public class GameController implements KeyListener, ActionListener, MouseListener, MouseMotionListener {
     private final Timer timer;
+    private final Timer timerItem;
     private final GameModel model;
     private final GameView view;
 
@@ -36,18 +37,44 @@ public class GameController implements KeyListener, ActionListener, MouseListene
         // Thiết lập Timer để cập nhật trạng thái trò chơi
         timer = new Timer(10, this);
         timer.start();
+
+        // Thiết lập Timer để đếm ngược thời gian sử dụng item
+        timerItem = new Timer(1000, e -> {
+            for (int i = 0; i < model.getItemTime().length; i++) {
+                model.getItemTime()[i]--;
+            }
+        });
     }
 
-    /**
-     * Khởi tạo trò chơi ban đầu
-     */
     private void init() {
         addBall();
         nextLevel(model.getLevel());
     }
 
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (model.isRunning()) {
+            List<Ball> balls = model.getBalls();
+            for (Ball ball : balls) {
+                ball.move();
+                this.checkCollision(ball);
+                this.checkCollisionBrick(ball);
+            }
+            List<Item> items = model.getItems();
+            for (Item item : items) {
+                item.increaseY();
+                this.checkCollision(item);
+            }
+            model.reduceTime();
+            this.removeList();
+            this.checkResult();
+        }
+        view.repaint();
+    }
+
     private void nextLevel(int lv) {
         model.setBricks(Level.getListBricks(lv));
+        model.setTime(Level.getTime(lv));
     }
 
     private void win() {
@@ -69,26 +96,6 @@ public class GameController implements KeyListener, ActionListener, MouseListene
         model.getBalls().clear();
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (model.isRunning()) {
-            List<Ball> balls = model.getBalls();
-            for (Ball ball : balls) {
-                ball.move();
-                this.checkCollision(ball);
-                this.checkCollisionBrick(ball);
-            }
-            List<Item> items = model.getItems();
-            for (Item item : items) {
-                item.increaseY();
-                this.checkCollision(item);
-            }
-            this.removeList();
-            this.checkResult();
-        }
-        view.repaint();
-    }
-
     private void checkCollision(Item item) {
         Paddle paddle = model.getPaddle();
         if ((item.getY() >= (paddle.getY() - SIZE / 2))
@@ -101,9 +108,62 @@ public class GameController implements KeyListener, ActionListener, MouseListene
         }
     }
 
+    private void countdown(int countdownTime, Runnable callback) {
+        Runnable countdownTask = () -> {
+            for (int i = countdownTime; i > 0; i--) {
+                System.out.println("Remaining " + i + " seconds.");
+                try {
+                    Thread.sleep(1000); // Pause for 1 second
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            // Sau khi kết thúc đếm ngược, gọi callback
+            if (callback != null) {
+                callback.run();
+            }
+        };
+        Thread thread = new Thread(countdownTask);
+        thread.start();
+    }
+
     private void itemEventHandler(Item item) {
+        System.out.println(item.getType());
         switch (item.getType()) {
-            case CONG3 -> {
+            case BOMB:
+                sound("bomb");
+                model.getBalls().clear();
+                break;
+            case EXTRA_LIFE:
+                this.sound("power21");
+                model.extraLife();
+                break;
+            case FIRE_BALL:
+                this.sound("power21");
+                Ball ball = model.getBalls().get((int) (Math.random() * model.getBalls().size()));
+                ball.setFireBall(true);
+
+                Runnable callback = () -> ball.setFireBall(false);
+                countdown(item.getTime(), callback);
+                break;
+            case KILL:
+                this.sound("bomb");
+                model.getBalls().remove((int) (Math.random() * model.getBalls().size()));
+                break;
+            case LASER:
+
+                break;
+            case LONGER:
+
+                break;
+            case PLUS_FIVE:
+                this.sound("power21");
+                model.increaseTime(5);
+                break;
+            case PLUS_SIX:
+
+                break;
+            case PLUS_THREE:
                 sound("power21");
                 Ball b1 = new Ball(item.getX(), item.getY() - 20, 20, 0, 6, UP, DOWN);
                 Ball b2 = new Ball(item.getX() - 20, item.getY() - 20, 20, 6, 6, DOWN, DOWN);
@@ -111,34 +171,32 @@ public class GameController implements KeyListener, ActionListener, MouseListene
                 model.getBalls().add(b1);
                 model.getBalls().add(b2);
                 model.getBalls().add(b3);
-            }
-            case THEMMANG -> {
-            }
-            case THEMTG -> {
-            }
-            case TANGTHANHDO -> {
-            }
-            case THUNHOTHANHDO -> {
-            }
-            case BOM -> {
-                sound("bomb");
-                model.getBalls().clear();
-            }
-            case MAXTHANHDO -> {
-            }
-            case NHAN3 -> {
-            }
-            case XOABONG -> {
-            }
-            case BONGLUA -> {
-            }
-            case LAZE -> {
-            }
-            case SAO -> {
+                break;
+            case SHORTER:
+
+                break;
+            case STAR:
                 model.increaseStar();
-            }
-            default -> {
-            }
+                break;
+            case TIMES_SIX:
+
+                break;
+            case TIMES_THREE:
+                sound("power21");
+                List<Ball> list_tmp = new ArrayList<>();
+                for (Ball ball_tmp : model.getBalls()) {
+                    Ball ball1 = new Ball(ball_tmp.getX() + SIZE, ball_tmp.getY(), SIZE, 6, 6, UP, ball_tmp.getDirectionY());
+                    Ball ball2 = new Ball(ball_tmp.getX() - SIZE, ball_tmp.getY(), SIZE, 6, 6, DOWN, ball_tmp.getDirectionY());
+                    list_tmp.add(ball1);
+                    list_tmp.add(ball2);
+                }
+                model.getBalls().addAll(list_tmp);
+                break;
+            case WALL:
+
+                break;
+            default:
+                break;
         }
     }
 
@@ -210,7 +268,9 @@ public class GameController implements KeyListener, ActionListener, MouseListene
             if ((ball.getY() > brick.getY() && ball.getY() <= brick.getY() + size + ball.getySpeed() / 2)
                     && (ball.getX() >= brick.getLowerLeftCorner().x
                     && ball.getX() <= brick.getLowerRightCorner().x)) {
-                ball.setDirectionY(UP);
+                if (!ball.isFireBall()) {
+                    ball.setDirectionY(UP);
+                }
                 brick.setVisible(false);
             }
 
@@ -218,7 +278,9 @@ public class GameController implements KeyListener, ActionListener, MouseListene
             if ((ball.getY() < brick.getY() && ball.getY() >= brick.getY() - size - ball.getySpeed() / 2)
                     && (ball.getX() >= brick.getUpperLeftCorner().x
                     && ball.getX() <= brick.getUpperRightCorner().x)) {
-                ball.setDirectionY(DOWN);
+                if (!ball.isFireBall()) {
+                    ball.setDirectionY(DOWN);
+                }
                 brick.setVisible(false);
             }
 
@@ -226,7 +288,9 @@ public class GameController implements KeyListener, ActionListener, MouseListene
             if ((ball.getX() < brick.getX() && ball.getX() >= brick.getX() - 2 * size - ball.getxSpeed() / 2)
                     && (ball.getY() >= brick.getUpperLeftCorner().y
                     && ball.getY() <= brick.getLowerLeftCorner().y)) {
-                ball.setDirectionX(DOWN);
+                if (!ball.isFireBall()) {
+                    ball.setDirectionX(DOWN);
+                }
                 brick.setVisible(false);
             }
 
@@ -234,22 +298,28 @@ public class GameController implements KeyListener, ActionListener, MouseListene
             if ((ball.getX() > brick.getX() && ball.getX() <= brick.getX() + 2 * size + ball.getxSpeed() / 2)
                     && (ball.getY() >= brick.getUpperRightCorner().y
                     && ball.getY() <= brick.getLowerRightCorner().y)) {
-                ball.setDirectionX(UP);
+                if (!ball.isFireBall()) {
+                    ball.setDirectionX(UP);
+                }
                 brick.setVisible(false);
             }
 
             if (arePointsOnSameLine(ball.getX(), ball.getY(), brick.getX() + size, brick.getY())) {
                 // Góc dưới phải
                 if (ball.getY() - brick.getY() >= 15 && ball.getY() - brick.getY() <= size) {
-                    ball.setDirectionX(UP);
-                    ball.setDirectionY(UP);
+                    if (!ball.isFireBall()) {
+                        ball.setDirectionX(UP);
+                        ball.setDirectionY(UP);
+                    }
                     brick.setVisible(false);
                 }
 
                 // Góc trên phải
                 if (ball.getY() - brick.getY() >= -size && ball.getY() - brick.getY() <= -15) {
-                    ball.setDirectionX(UP);
-                    ball.setDirectionY(DOWN);
+                    if (!ball.isFireBall()) {
+                        ball.setDirectionX(UP);
+                        ball.setDirectionY(DOWN);
+                    }
                     brick.setVisible(false);
                 }
             }
@@ -257,15 +327,19 @@ public class GameController implements KeyListener, ActionListener, MouseListene
             if (arePointsOnSameLine(ball.getX(), ball.getY(), brick.getX() - size, brick.getY())) {
                 // Góc trên trái
                 if (ball.getY() - brick.getY() >= -size && ball.getY() - brick.getY() <= -15) {
-                    ball.setDirectionX(DOWN);
-                    ball.setDirectionY(DOWN);
+                    if (!ball.isFireBall()) {
+                        ball.setDirectionX(DOWN);
+                        ball.setDirectionY(DOWN);
+                    }
                     brick.setVisible(false);
                 }
                 // Góc dưới trái
                 if (ball.getY() - brick.getY() >= 15 && ball.getY() - brick.getY() <= size) {
+                    if (!ball.isFireBall()) {
+                        ball.setDirectionX(DOWN);
+                        ball.setDirectionY(UP);
+                    }
                     brick.setVisible(false);
-                    ball.setDirectionX(DOWN);
-                    ball.setDirectionY(UP);
                 }
             }
 
@@ -304,11 +378,13 @@ public class GameController implements KeyListener, ActionListener, MouseListene
             }
         }
         model.setBricks(newBricks);
-
-
     }
 
     private void checkResult() {
+        if (model.getTime() <= 0.0) {
+            this.endGame();
+        }
+
         if (model.getBalls().isEmpty()) {
             model.reduceTim();
             sound("lost");
@@ -383,10 +459,10 @@ public class GameController implements KeyListener, ActionListener, MouseListene
         sound("click");
 
         if (model.isNextLevel()) {
-            model.increaseLevel();//Tăng lv lên 1
-            nextLevel(model.getLevel());//Lấy ra list brick theo lv
-            addBall();//Thêm 1 quả bóng
-            model.setTim(3);//Cho tim về mặc định
+            model.increaseLevel();// Tăng lv lên 1
+            nextLevel(model.getLevel());// Lấy ra list brick theo lv
+            addBall();// Thêm 1 quả bóng
+            model.setTim(3);// Cho tim về mặc định
             model.setNextLevel(false);
             sound("neutral");
             return;

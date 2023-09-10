@@ -5,6 +5,7 @@ import org.example.ulti.FileLoader;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class GameModel {
@@ -14,6 +15,7 @@ public class GameModel {
     public static final int PADDLE_WIDTH = SIZE * 10;
 
     public static final Image[] ballImages = new Image[]{
+            FileLoader.loadImageFromResource("balls/ball.png"),
             FileLoader.loadImageFromResource("balls/baseball.png"),
             FileLoader.loadImageFromResource("balls/basketball.png"),
             FileLoader.loadImageFromResource("balls/beach1.png"),
@@ -25,23 +27,25 @@ public class GameModel {
             FileLoader.loadImageFromResource("balls/golf.png"),
             FileLoader.loadImageFromResource("balls/iron.png"),
             FileLoader.loadImageFromResource("balls/jupiter.png"),
-            FileLoader.loadImageFromResource("balls/life ring.png"),
-            FileLoader.loadImageFromResource("balls/marble blue.png"),
-            FileLoader.loadImageFromResource("balls/marble green.png"),
-            FileLoader.loadImageFromResource("balls/marble purple.png"),
-            FileLoader.loadImageFromResource("balls/marble yellow.png"),
-            FileLoader.loadImageFromResource("balls/marble zebra.png"),
+            FileLoader.loadImageFromResource("balls/life_ring.png"),
+            FileLoader.loadImageFromResource("balls/marble_blue.png"),
+            FileLoader.loadImageFromResource("balls/marble_green.png"),
+            FileLoader.loadImageFromResource("balls/marble_purple.png"),
+            FileLoader.loadImageFromResource("balls/marble_yellow.png"),
+            FileLoader.loadImageFromResource("balls/marble_zebra.png"),
             FileLoader.loadImageFromResource("balls/mars.png"),
             FileLoader.loadImageFromResource("balls/mercury.png"),
             FileLoader.loadImageFromResource("balls/neptune.png"),
             FileLoader.loadImageFromResource("balls/pluto.png"),
             FileLoader.loadImageFromResource("balls/saturn.png"),
+            FileLoader.loadImageFromResource("balls/small_ball.png"),
             FileLoader.loadImageFromResource("balls/snooker.png"),
             FileLoader.loadImageFromResource("balls/soccer.png"),
+            FileLoader.loadImageFromResource("balls/star.png"),
             FileLoader.loadImageFromResource("balls/tennis.png"),
             FileLoader.loadImageFromResource("balls/uranus.png"),
             FileLoader.loadImageFromResource("balls/venus.png"),
-            FileLoader.loadImageFromResource("balls/volleyball.png")
+            FileLoader.loadImageFromResource("balls/volleyball.png"),
     };
 
     public static final Image[] paddleImages = new Image[]{
@@ -65,20 +69,36 @@ public class GameModel {
             FileLoader.loadImageFromResource("themes/background (8).jpg"),
     };
     public static final Image[] iconItem = new Image[]{
-            FileLoader.loadImageFromResource("powerups/plus_three.png"),
-            FileLoader.loadImageFromResource("powerups/times_three.png"),
+            FileLoader.loadImageFromResource("powerups/bomb.png"),
             FileLoader.loadImageFromResource("powerups/extra_life.png"),
-            FileLoader.loadImageFromResource("powerups/wall.png"),
-            FileLoader.loadImageFromResource("powerups/longer.png"),
-            FileLoader.loadImageFromResource("powerups/star.png"),
             FileLoader.loadImageFromResource("powerups/fire_ball.png"),
-            FileLoader.loadImageFromResource("powerups/laser.png"),
-            FileLoader.loadImageFromResource("powerups/plus_five.png"),
-            FileLoader.loadImageFromResource("powerups/times_six.png"),
             FileLoader.loadImageFromResource("powerups/kill.png"),
+            FileLoader.loadImageFromResource("powerups/laser.png"),
+            FileLoader.loadImageFromResource("powerups/laser2.png"),
+            FileLoader.loadImageFromResource("powerups/longer.png"),
+            FileLoader.loadImageFromResource("powerups/plus_five.png"),
+            FileLoader.loadImageFromResource("powerups/plus_six.png"),
+            FileLoader.loadImageFromResource("powerups/plus_three.png"),
             FileLoader.loadImageFromResource("powerups/shorter.png"),
-            FileLoader.loadImageFromResource("powerups/bomb.png")
+            FileLoader.loadImageFromResource("powerups/star.png"),
+            FileLoader.loadImageFromResource("powerups/times_six.png"),
+            FileLoader.loadImageFromResource("powerups/times_three.png"),
+            FileLoader.loadImageFromResource("powerups/wall.png"),
     };
+    public static final String[] detailItem = new String[]{
+            "Bắn thêm 3 quả bóng",
+            "Biến mỗi quả bóng hiện có thành 3",
+            "Tăng thêm một mạng",
+            "Thêm một bức tường dưới thanh đỡ để bảo vệ các quả bóng khỏi rơi ra khỏi màn hình trong vài giây",
+            "Làm thanh đỡ dài hơn trong vài giây",
+            "Cộng thêm 1 sao (Bạn có thể dùng chúng để mua skin hoặc bỏ qua các cấp độ mà bạn không thể đánh bại)",
+            "Quả bóng phá hủy tất cả các viên gạch trên đường đi của nó trong vài giây",
+            "Trùm tia laze bắn ra từ thanh đỡ phá hủy toàn bộ một cột gạch",
+            "Cộng thêm 5 giây",
+            "Biến mỗi quả bóng hiện có thành 6",
+            "Xóa bỏ ngẫu nhiên một quả bóng đang có",
+            "Làm thanh đỡ ngắn hơn trong vài giây",
+            "Phát nổ và mất một mạng"};
 
     public static final Image[][] blockImage = new Image[8][4];
 
@@ -101,6 +121,17 @@ public class GameModel {
         }
     }
 
+    public static final Font inkFree60 = new Font("Ink Free", Font.BOLD, 60);
+    public static final Font inkFree25 = new Font("Ink Free", Font.BOLD, 25);
+    public static final Font tahoma = new Font("Tahoma", Font.BOLD, 15);
+
+
+    public static final Font arial = new Font("Arial", Font.BOLD, 15);
+
+    public static final Color white = new Color(255, 255, 255, 130);
+    public static final Color blue = new Color(15, 41, 90);
+
+
     private final Paddle paddle;
     private List<Ball> balls;
     private List<Brick> bricks;
@@ -113,15 +144,14 @@ public class GameModel {
 
     private int level;
     private int star;
-
-    private int tim;
+    private double time;
+    private int life;
+    private int[] itemTime;
 
     private boolean musicOn;//Bật tắt âm thanh
     private boolean running;//Bắt đầu di chuyển và kiểm tra bóng va chạm
     private boolean gameOver;//Kiểm tra thua
     private boolean nextLevel;//Chờ chuyển lv
-
-    private final Font inkFree;
 
 
     public GameModel() {
@@ -132,17 +162,18 @@ public class GameModel {
 
         paddle = new Paddle((WIDTH / 2) - (PADDLE_WIDTH / 2), HEIGHT - SIZE * 2, PADDLE_WIDTH, SIZE);
 
-        level = 6;
-        tim = 3;
+        level = 21;
+        life = 3;
         indexPaddleImage = 0;
         indexBallImage = 0;
         indexBackgroundImage = 0;
+        itemTime = new int[ItemType.values().length];
+        Arrays.fill(itemTime, 0);
+
         musicOn = true;
         gameOver = false;
         running = false;
         nextLevel = false;
-
-        inkFree = new Font("Ink Free", Font.BOLD, 60);
     }
 
     public List<Ball> getBalls() {
@@ -234,22 +265,64 @@ public class GameModel {
     }
 
     public Font getInkFree() {
-        return inkFree;
+        return inkFree60;
     }
 
     public int getTim() {
-        return tim;
+        return life;
     }
 
     public void setTim(int tim) {
-        this.tim = tim;
+        this.life = tim;
     }
 
     public void reduceTim() {
-        this.tim--;
+        this.life--;
     }
 
     public boolean isMusicOn() {
         return musicOn;
+    }
+
+    public double getTime() {
+        return time;
+    }
+
+    public String getTimeDraw() {
+        int p = (int) (time / 60);
+        int s = (int) (time % 60);
+        return String.format("%d:%d", p, s);
+    }
+
+    public void setTime(double time) {
+        this.time = time;
+    }
+
+    public void increaseTime(double time) {
+        this.time += time;
+    }
+
+    public void reduceTime() {
+        time -= 0.01D;
+    }
+
+    public List<Button> getButtons() {
+        return buttons;
+    }
+
+    public void setButtons(List<Button> buttons) {
+        this.buttons = buttons;
+    }
+
+    public void extraLife() {
+        life++;
+    }
+
+    public int[] getItemTime() {
+        return itemTime;
+    }
+
+    public void setItemTime(int[] itemTime) {
+        this.itemTime = itemTime;
     }
 }
