@@ -5,7 +5,6 @@ import org.example.ulti.FileLoader;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class GameModel {
@@ -13,6 +12,8 @@ public class GameModel {
     public static final int HEIGHT = 720;
     public static final int SIZE = 20;
     public static final int PADDLE_WIDTH = SIZE * 10;
+    public static final double TIME_DECREMENT = 0.01D;
+
 
     public static final Image[] ballImages = new Image[]{
             FileLoader.loadImageFromResource("balls/ball.png"),
@@ -100,7 +101,7 @@ public class GameModel {
             "Làm thanh đỡ ngắn hơn trong vài giây",
             "Phát nổ và mất một mạng"};
 
-    public static final Image[][] blockImage = new Image[8][4];
+    public static final Image[][] blockImage = new Image[9][4];
 
     // Khối static initializer để khởi tạo biến static
     static {
@@ -118,19 +119,19 @@ public class GameModel {
                         bufferedImage.getSubimage(246, yOffset, width, height)
                 };
             }
+            blockImage[8][0] = bufferedImage.getSubimage(328, 0, width, height);
+            blockImage[8][1] = bufferedImage.getSubimage(328, 42, width, height);
+            blockImage[8][2] = bufferedImage.getSubimage(328, 84, width, height);
+
         }
     }
 
     public static final Font inkFree60 = new Font("Ink Free", Font.BOLD, 60);
-    public static final Font inkFree25 = new Font("Ink Free", Font.BOLD, 25);
     public static final Font tahoma = new Font("Tahoma", Font.BOLD, 15);
-
-
     public static final Font arial = new Font("Arial", Font.BOLD, 15);
 
     public static final Color white = new Color(255, 255, 255, 130);
     public static final Color blue = new Color(15, 41, 90);
-
 
     private final Paddle paddle;
     private List<Ball> balls;
@@ -146,12 +147,12 @@ public class GameModel {
     private int star;
     private double time;
     private int life;
-    private int[] itemTime;
 
     private boolean musicOn;//Bật tắt âm thanh
     private boolean running;//Bắt đầu di chuyển và kiểm tra bóng va chạm
     private boolean gameOver;//Kiểm tra thua
     private boolean nextLevel;//Chờ chuyển lv
+    private boolean pause;//Chờ
 
 
     public GameModel() {
@@ -159,21 +160,19 @@ public class GameModel {
         bricks = new ArrayList<>();
         items = new ArrayList<>();
         buttons = new ArrayList<>();
-
         paddle = new Paddle((WIDTH / 2) - (PADDLE_WIDTH / 2), HEIGHT - SIZE * 2, PADDLE_WIDTH, SIZE);
 
-        level = 21;
+        level = 2;
         life = 3;
-        indexPaddleImage = 0;
+        indexPaddleImage = 1;
         indexBallImage = 0;
         indexBackgroundImage = 0;
-        itemTime = new int[ItemType.values().length];
-        Arrays.fill(itemTime, 0);
 
         musicOn = true;
         gameOver = false;
         running = false;
         nextLevel = false;
+        pause = false;
     }
 
     public List<Ball> getBalls() {
@@ -303,7 +302,7 @@ public class GameModel {
     }
 
     public void reduceTime() {
-        time -= 0.01D;
+        time -= TIME_DECREMENT;
     }
 
     public List<Button> getButtons() {
@@ -318,11 +317,15 @@ public class GameModel {
         life++;
     }
 
-    public int[] getItemTime() {
-        return itemTime;
+    public void setIndexBackgroundImage(int indexBackgroundImage) {
+        this.indexBackgroundImage = indexBackgroundImage;
     }
 
-    public void setItemTime(int[] itemTime) {
-        this.itemTime = itemTime;
+    public boolean isPause() {
+        return pause;
+    }
+
+    public void setPause(boolean pause) {
+        this.pause = pause;
     }
 }

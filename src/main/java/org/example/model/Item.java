@@ -9,6 +9,7 @@ public class Item {
     private boolean isVisible;
     private Image icon;
     private int time;
+    private String soundName;
 
     public Item(int x, int y, ItemType type) {
         this.x = x;
@@ -16,24 +17,58 @@ public class Item {
         this.type = type;
         this.isVisible = true;
         this.setIcon(type);
+        this.soundName = "power21";
     }
 
     private void setIcon(ItemType type) {
         switch (type) {
-            case BOMB -> this.icon = GameModel.iconItem[0];
-            case EXTRA_LIFE -> this.icon = GameModel.iconItem[1];
-            case FIRE_BALL -> this.icon = GameModel.iconItem[2];
-            case KILL -> this.icon = GameModel.iconItem[3];
-            case LASER -> this.icon = GameModel.iconItem[4];
-            case LONGER -> this.icon = GameModel.iconItem[5];
-            case PLUS_FIVE -> this.icon = GameModel.iconItem[6];
-            case PLUS_SIX -> this.icon = GameModel.iconItem[7];
-            case PLUS_THREE -> this.icon = GameModel.iconItem[8];
-            case SHORTER -> this.icon = GameModel.iconItem[9];
-            case STAR -> this.icon = GameModel.iconItem[10];
-            case TIMES_SIX -> this.icon = GameModel.iconItem[11];
-            case TIMES_THREE -> this.icon = GameModel.iconItem[12];
-            case WALL -> this.icon = GameModel.iconItem[13];
+            case BOMB -> {
+                this.icon = GameModel.iconItem[0];
+            }
+            case EXTRA_LIFE -> {
+                this.icon = GameModel.iconItem[1];
+            }
+            case FIRE_BALL -> {
+                this.time = 5;
+                this.icon = GameModel.iconItem[2];
+            }
+            case KILL -> {
+                this.icon = GameModel.iconItem[3];
+            }
+            case LASER -> {
+                this.time = 3;
+                this.icon = GameModel.iconItem[4];
+            }
+            case LONGER -> {
+                this.time = 10;
+                this.icon = GameModel.iconItem[6];
+            }
+            case PLUS_FIVE -> {
+                this.icon = GameModel.iconItem[7];
+            }
+            case PLUS_SIX -> {
+                this.icon = GameModel.iconItem[8];
+            }
+            case PLUS_THREE -> {
+                this.icon = GameModel.iconItem[9];
+            }
+            case SHORTER -> {
+                this.time = 10;
+                this.icon = GameModel.iconItem[10];
+            }
+            case STAR -> {
+                this.icon = GameModel.iconItem[11];
+            }
+            case TIMES_SIX -> {
+                this.icon = GameModel.iconItem[12];
+            }
+            case TIMES_THREE -> {
+                this.icon = GameModel.iconItem[13];
+            }
+            case WALL -> {
+                this.time = 10;
+                this.icon = GameModel.iconItem[14];
+            }
             default -> this.icon = null;
         }
     }
@@ -90,5 +125,13 @@ public class Item {
 
     public void setTime(int time) {
         this.time = time;
+    }
+
+    public String getSoundName() {
+        return soundName;
+    }
+
+    public void setSoundName(String soundName) {
+        this.soundName = soundName;
     }
 }

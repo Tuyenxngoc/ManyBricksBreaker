@@ -1,6 +1,6 @@
 package org.example.model;
 
-import java.awt.*;
+import static org.example.model.GameModel.TIME_DECREMENT;
 
 public class Ball {
     private int x;
@@ -8,12 +8,12 @@ public class Ball {
     private int diameter;
     private int xSpeed;
     private int ySpeed;
-    private Image image;
     private BallDirection directionX;
     private BallDirection directionY;
 
     private boolean isVisible;
     private boolean fireBall;
+    private double fireBallTime;
 
     public Ball(int x, int y, int diameter, int xSpeed, int ySpeed, BallDirection directionX, BallDirection directionY) {
         this.x = x;
@@ -49,10 +49,6 @@ public class Ball {
 
     public int getPerimeter() {
         return diameter / 2;
-    }
-
-    public Rectangle getBounds() {
-        return new Rectangle(x, y, diameter, diameter);
     }
 
     public void reduceY() {
@@ -95,31 +91,32 @@ public class Ball {
         }
     }
 
+    public void handleEvent() {
+        this.move();
+        if (isFireBall()) {
+            increaseFireBallTime();
+        }
+    }
+
+
     public boolean isVisible() {
         return isVisible;
     }
 
-    public void setxSpeed(int xSpeed) {
+    public void setXSpeed(int xSpeed) {
         this.xSpeed = xSpeed;
     }
-
 
     public void setDirectionX(BallDirection directionX) {
         this.directionX = directionX;
     }
 
-
     public void setDirectionY(BallDirection directionY) {
         this.directionY = directionY;
     }
 
-
     public void setVisible(boolean visible) {
         isVisible = visible;
-    }
-
-    public Image getImage() {
-        return image;
     }
 
     public void setX(int x) {
@@ -127,14 +124,6 @@ public class Ball {
             return;
         }
         this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public void setDiameter(int diameter) {
-        this.diameter = diameter;
     }
 
     public int getxSpeed() {
@@ -145,20 +134,8 @@ public class Ball {
         return ySpeed;
     }
 
-    public void setySpeed(int ySpeed) {
-        this.ySpeed = ySpeed;
-    }
-
-    public BallDirection getDirectionX() {
-        return directionX;
-    }
-
     public BallDirection getDirectionY() {
         return directionY;
-    }
-
-    public void setImage(Image image) {
-        this.image = image;
     }
 
     public boolean isFireBall() {
@@ -167,5 +144,20 @@ public class Ball {
 
     public void setFireBall(boolean fireBall) {
         this.fireBall = fireBall;
+    }
+
+    public double getFireBallTime() {
+        return fireBallTime;
+    }
+
+    public void setFireBallTime(double fireBallTime) {
+        this.fireBallTime = fireBallTime;
+    }
+
+    public void increaseFireBallTime() {
+        fireBallTime -= TIME_DECREMENT;
+        if (fireBallTime <= 0.0) {
+            this.fireBall = false;
+        }
     }
 }

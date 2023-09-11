@@ -16,8 +16,8 @@ import static org.example.model.BallDirection.UP;
 import static org.example.model.GameModel.*;
 
 public class GameController implements KeyListener, ActionListener, MouseListener, MouseMotionListener {
+
     private final Timer timer;
-    private final Timer timerItem;
     private final GameModel model;
     private final GameView view;
 
@@ -37,13 +37,6 @@ public class GameController implements KeyListener, ActionListener, MouseListene
         // Thiết lập Timer để cập nhật trạng thái trò chơi
         timer = new Timer(10, this);
         timer.start();
-
-        // Thiết lập Timer để đếm ngược thời gian sử dụng item
-        timerItem = new Timer(1000, e -> {
-            for (int i = 0; i < model.getItemTime().length; i++) {
-                model.getItemTime()[i]--;
-            }
-        });
     }
 
     private void init() {
@@ -56,7 +49,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
         if (model.isRunning()) {
             List<Ball> balls = model.getBalls();
             for (Ball ball : balls) {
-                ball.move();
+                ball.handleEvent();
                 this.checkCollision(ball);
                 this.checkCollisionBrick(ball);
             }
@@ -65,6 +58,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
                 item.increaseY();
                 this.checkCollision(item);
             }
+            model.getPaddle().handleEvent();
             model.reduceTime();
             this.removeList();
             this.checkResult();
@@ -75,11 +69,13 @@ public class GameController implements KeyListener, ActionListener, MouseListene
     private void nextLevel(int lv) {
         model.setBricks(Level.getListBricks(lv));
         model.setTime(Level.getTime(lv));
+        model.setIndexBackgroundImage(lv);
     }
 
     private void win() {
         sound("win");
         this.resetGame();
+        model.getPaddle().reset();
         model.setRunning(false);
         model.setNextLevel(true);
     }
@@ -108,102 +104,77 @@ public class GameController implements KeyListener, ActionListener, MouseListene
         }
     }
 
-    private void countdown(int countdownTime, Runnable callback) {
-        Runnable countdownTask = () -> {
-            for (int i = countdownTime; i > 0; i--) {
-                System.out.println("Remaining " + i + " seconds.");
-                try {
-                    Thread.sleep(1000); // Pause for 1 second
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            // Sau khi kết thúc đếm ngược, gọi callback
-            if (callback != null) {
-                callback.run();
-            }
-        };
-        Thread thread = new Thread(countdownTask);
-        thread.start();
-    }
-
     private void itemEventHandler(Item item) {
-        System.out.println(item.getType());
+        sound(item.getSoundName());
         switch (item.getType()) {
-            case BOMB:
-                sound("bomb");
+            case BOMB -> {
                 model.getBalls().clear();
-                break;
-            case EXTRA_LIFE:
-                this.sound("power21");
+            }
+            case EXTRA_LIFE -> {
                 model.extraLife();
-                break;
-            case FIRE_BALL:
-                this.sound("power21");
+            }
+            case FIRE_BALL -> {
                 Ball ball = model.getBalls().get((int) (Math.random() * model.getBalls().size()));
                 ball.setFireBall(true);
-
-                Runnable callback = () -> ball.setFireBall(false);
-                countdown(item.getTime(), callback);
-                break;
-            case KILL:
-                this.sound("bomb");
+                ball.setFireBallTime(item.getTime());
+            }
+            case KILL -> {
                 model.getBalls().remove((int) (Math.random() * model.getBalls().size()));
-                break;
-            case LASER:
-
-                break;
-            case LONGER:
-
-                break;
-            case PLUS_FIVE:
-                this.sound("power21");
+            }
+            case LASER -> {
+                model.getPaddle().setLaserTime(item.getTime());
+            }
+            case LONGER -> {
+                model.getPaddle().longer(0.3);
+                model.getPaddle().setLongerTime(item.getTime());
+            }
+            case PLUS_FIVE -> {
                 model.increaseTime(5);
-                break;
-            case PLUS_SIX:
-
-                break;
-            case PLUS_THREE:
-                sound("power21");
+            }
+            case PLUS_SIX -> {
+                model.increaseTime(6);
+            }
+            case PLUS_THREE -> {
                 Ball b1 = new Ball(item.getX(), item.getY() - 20, 20, 0, 6, UP, DOWN);
                 Ball b2 = new Ball(item.getX() - 20, item.getY() - 20, 20, 6, 6, DOWN, DOWN);
                 Ball b3 = new Ball(item.getX() + 20, item.getY() - 20, 20, 6, 6, UP, DOWN);
                 model.getBalls().add(b1);
                 model.getBalls().add(b2);
                 model.getBalls().add(b3);
-                break;
-            case SHORTER:
-
-                break;
-            case STAR:
+            }
+            case SHORTER -> {
+                model.getPaddle().shorter(0.3);
+                model.getPaddle().setShorterTime(item.getTime());
+            }
+            case STAR -> {
                 model.increaseStar();
-                break;
-            case TIMES_SIX:
-
-                break;
-            case TIMES_THREE:
-                sound("power21");
+            }
+            case TIMES_SIX -> {
+                System.out.println("update...");
+            }
+            case TIMES_THREE -> {
                 List<Ball> list_tmp = new ArrayList<>();
                 for (Ball ball_tmp : model.getBalls()) {
                     Ball ball1 = new Ball(ball_tmp.getX() + SIZE, ball_tmp.getY(), SIZE, 6, 6, UP, ball_tmp.getDirectionY());
                     Ball ball2 = new Ball(ball_tmp.getX() - SIZE, ball_tmp.getY(), SIZE, 6, 6, DOWN, ball_tmp.getDirectionY());
                     list_tmp.add(ball1);
                     list_tmp.add(ball2);
+                    if (list_tmp.size() > 15) {
+                        break;
+                    }
                 }
                 model.getBalls().addAll(list_tmp);
-                break;
-            case WALL:
-
-                break;
-            default:
-                break;
+            }
+            case WALL -> {
+                model.getPaddle().setWallTime(item.getTime());
+            }
+            default -> {
+            }
         }
     }
 
     private void checkCollision(Ball ball) {
         Paddle paddle = model.getPaddle();
-        int size = SIZE;
-
         // Kiểm tra va chạm hai bên
         if (ball.getX() <= ball.getPerimeter()) {
             ball.setDirectionX(UP);
@@ -223,38 +194,41 @@ public class GameController implements KeyListener, ActionListener, MouseListene
             ball.setDirectionY(DOWN);
             sound("ball");
 
-            if (ball.getX() < paddle.getX() + size) {
+            if (ball.getX() < paddle.getX() + SIZE) {
                 ball.setDirectionX(DOWN);
-                ball.setxSpeed(10);
-            } else if (ball.getX() >= paddle.getX() + size && ball.getX() < paddle.getX()
-                    + size * 2) {
+                ball.setXSpeed(10);
+            } else if (ball.getX() >= paddle.getX() + SIZE && ball.getX() < paddle.getX()
+                    + SIZE * 2) {
                 ball.setDirectionX(DOWN);
-                ball.setxSpeed(8);
-            } else if (ball.getX() >= paddle.getX() + size * 2 && ball.getX() < paddle.getX() + size * 3) {
+                ball.setXSpeed(8);
+            } else if (ball.getX() >= paddle.getX() + SIZE * 2 && ball.getX() < paddle.getX() + SIZE * 3) {
                 ball.setDirectionX(DOWN);
-                ball.setxSpeed(6);
-            } else if (ball.getX() >= paddle.getX() + size * 3 && ball.getX() < paddle.getX() + size * 4) {
+                ball.setXSpeed(6);
+            } else if (ball.getX() >= paddle.getX() + SIZE * 3 && ball.getX() < paddle.getX() + SIZE * 4) {
                 ball.setDirectionX(DOWN);
-                ball.setxSpeed(4);
-            } else if (ball.getX() >= paddle.getX() + size * 4 && ball.getX() < paddle.getX() + size * 5) {
+                ball.setXSpeed(4);
+            } else if (ball.getX() >= paddle.getX() + SIZE * 4 && ball.getX() < paddle.getX() + SIZE * 5) {
                 ball.setDirectionX(DOWN);
-                ball.setxSpeed(2);
-            } else if (ball.getX() >= paddle.getX() + size * 5 && ball.getX() < paddle.getX() + size * 6) {
+                ball.setXSpeed(2);
+            } else if (ball.getX() >= paddle.getX() + SIZE * 5 && ball.getX() < paddle.getX() + SIZE * 6) {
                 ball.setDirectionX(UP);
-                ball.setxSpeed(2);
-            } else if (ball.getX() >= paddle.getX() + size * 6 && ball.getX() < paddle.getX() + size * 7) {
+                ball.setXSpeed(2);
+            } else if (ball.getX() >= paddle.getX() + SIZE * 6 && ball.getX() < paddle.getX() + SIZE * 7) {
                 ball.setDirectionX(UP);
-                ball.setxSpeed(4);
-            } else if (ball.getX() >= paddle.getX() + size * 7 && ball.getX() < paddle.getX() + size * 8) {
+                ball.setXSpeed(4);
+            } else if (ball.getX() >= paddle.getX() + SIZE * 7 && ball.getX() < paddle.getX() + SIZE * 8) {
                 ball.setDirectionX(UP);
-                ball.setxSpeed(6);
-            } else if (ball.getX() >= paddle.getX() + size * 8 && ball.getX() < paddle.getX() + size * 9) {
+                ball.setXSpeed(6);
+            } else if (ball.getX() >= paddle.getX() + SIZE * 8 && ball.getX() < paddle.getX() + SIZE * 9) {
                 ball.setDirectionX(UP);
-                ball.setxSpeed(8);
-            } else if (ball.getX() >= paddle.getX() + size * 9) {
+                ball.setXSpeed(8);
+            } else if (ball.getX() >= paddle.getX() + SIZE * 9) {
                 ball.setDirectionX(UP);
-                ball.setxSpeed(10);
+                ball.setXSpeed(10);
             }
+        } else if (ball.getY() >= 690 && model.getPaddle().getWallTime() > -1) {
+            ball.setDirectionY(DOWN);
+            sound("ball");
         } else if (ball.getY() >= (HEIGHT - ball.getPerimeter())) {
             ball.setVisible(false);
         }
@@ -262,10 +236,10 @@ public class GameController implements KeyListener, ActionListener, MouseListene
 
     private void checkCollisionBrick(Ball ball) {
         List<Brick> bricks = model.getBricks();
-        int size = SIZE;
+
         for (Brick brick : bricks) {
             // Cạnh dưới
-            if ((ball.getY() > brick.getY() && ball.getY() <= brick.getY() + size + ball.getySpeed() / 2)
+            if ((ball.getY() > brick.getY() && ball.getY() <= brick.getY() + SIZE + ball.getySpeed() / 2)
                     && (ball.getX() >= brick.getLowerLeftCorner().x
                     && ball.getX() <= brick.getLowerRightCorner().x)) {
                 if (!ball.isFireBall()) {
@@ -275,7 +249,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
             }
 
             // Cạnh trên
-            if ((ball.getY() < brick.getY() && ball.getY() >= brick.getY() - size - ball.getySpeed() / 2)
+            if ((ball.getY() < brick.getY() && ball.getY() >= brick.getY() - SIZE - ball.getySpeed() / 2)
                     && (ball.getX() >= brick.getUpperLeftCorner().x
                     && ball.getX() <= brick.getUpperRightCorner().x)) {
                 if (!ball.isFireBall()) {
@@ -285,7 +259,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
             }
 
             // Cạnh trái
-            if ((ball.getX() < brick.getX() && ball.getX() >= brick.getX() - 2 * size - ball.getxSpeed() / 2)
+            if ((ball.getX() < brick.getX() && ball.getX() >= brick.getX() - 2 * SIZE - ball.getxSpeed() / 2)
                     && (ball.getY() >= brick.getUpperLeftCorner().y
                     && ball.getY() <= brick.getLowerLeftCorner().y)) {
                 if (!ball.isFireBall()) {
@@ -295,7 +269,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
             }
 
             // Cạnh phải
-            if ((ball.getX() > brick.getX() && ball.getX() <= brick.getX() + 2 * size + ball.getxSpeed() / 2)
+            if ((ball.getX() > brick.getX() && ball.getX() <= brick.getX() + 2 * SIZE + ball.getxSpeed() / 2)
                     && (ball.getY() >= brick.getUpperRightCorner().y
                     && ball.getY() <= brick.getLowerRightCorner().y)) {
                 if (!ball.isFireBall()) {
@@ -304,9 +278,9 @@ public class GameController implements KeyListener, ActionListener, MouseListene
                 brick.setVisible(false);
             }
 
-            if (arePointsOnSameLine(ball.getX(), ball.getY(), brick.getX() + size, brick.getY())) {
+            if (arePointsOnSameLine(ball.getX(), ball.getY(), brick.getX() + SIZE, brick.getY())) {
                 // Góc dưới phải
-                if (ball.getY() - brick.getY() >= 15 && ball.getY() - brick.getY() <= size) {
+                if (ball.getY() - brick.getY() >= 15 && ball.getY() - brick.getY() <= SIZE) {
                     if (!ball.isFireBall()) {
                         ball.setDirectionX(UP);
                         ball.setDirectionY(UP);
@@ -315,7 +289,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
                 }
 
                 // Góc trên phải
-                if (ball.getY() - brick.getY() >= -size && ball.getY() - brick.getY() <= -15) {
+                if (ball.getY() - brick.getY() >= -SIZE && ball.getY() - brick.getY() <= -15) {
                     if (!ball.isFireBall()) {
                         ball.setDirectionX(UP);
                         ball.setDirectionY(DOWN);
@@ -324,9 +298,9 @@ public class GameController implements KeyListener, ActionListener, MouseListene
                 }
             }
 
-            if (arePointsOnSameLine(ball.getX(), ball.getY(), brick.getX() - size, brick.getY())) {
+            if (arePointsOnSameLine(ball.getX(), ball.getY(), brick.getX() - SIZE, brick.getY())) {
                 // Góc trên trái
-                if (ball.getY() - brick.getY() >= -size && ball.getY() - brick.getY() <= -15) {
+                if (ball.getY() - brick.getY() >= -SIZE && ball.getY() - brick.getY() <= -15) {
                     if (!ball.isFireBall()) {
                         ball.setDirectionX(DOWN);
                         ball.setDirectionY(DOWN);
@@ -334,7 +308,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
                     brick.setVisible(false);
                 }
                 // Góc dưới trái
-                if (ball.getY() - brick.getY() >= 15 && ball.getY() - brick.getY() <= size) {
+                if (ball.getY() - brick.getY() >= 15 && ball.getY() - brick.getY() <= SIZE) {
                     if (!ball.isFireBall()) {
                         ball.setDirectionX(DOWN);
                         ball.setDirectionY(UP);
@@ -345,6 +319,12 @@ public class GameController implements KeyListener, ActionListener, MouseListene
 
             if (!brick.isVisible()) {
                 sound("ball");
+            }
+            if (model.getPaddle().isLaser()
+                    && model.getPaddle().getMidpoint() > brick.getLowerLeftCorner().x
+                    && model.getPaddle().getMidpoint() < brick.getLowerRightCorner().x) {
+                brick.setVisible(false);
+                sound("laser");
             }
         }
     }
@@ -387,6 +367,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
 
         if (model.getBalls().isEmpty()) {
             model.reduceTim();
+            model.getPaddle().reset();
             sound("lost");
             if (model.getTim() <= 0) {
                 this.endGame();
@@ -433,7 +414,21 @@ public class GameController implements KeyListener, ActionListener, MouseListene
 
     @Override
     public void keyPressed(KeyEvent e) {
-
+        System.out.println(e.getKeyCode());
+        if (e.getKeyCode() == 32) {
+            if (model.isPause()) {
+                model.setPause(false);
+                if (!timer.isRunning()) {
+                    this.timer.start();
+                }
+            } else {
+                model.setPause(true);
+                view.repaint();
+                if (timer.isRunning()) {
+                    this.timer.stop();
+                }
+            }
+        }
     }
 
     @Override
