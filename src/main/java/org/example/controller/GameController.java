@@ -7,6 +7,7 @@ import org.example.view.GameView;
 
 import javax.sound.sampled.Clip;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,14 +48,12 @@ public class GameController implements KeyListener, ActionListener, MouseListene
     @Override
     public void actionPerformed(ActionEvent e) {
         if (model.isRunning()) {
-            List<Ball> balls = model.getBalls();
-            for (Ball ball : balls) {
+            for (Ball ball : model.getBalls()) {
                 ball.handleEvent();
                 this.checkCollision(ball);
                 this.checkCollisionBrick(ball);
             }
-            List<Item> items = model.getItems();
-            for (Item item : items) {
+            for (Item item : model.getItems()) {
                 item.increaseY();
                 this.checkCollision(item);
             }
@@ -68,13 +67,13 @@ public class GameController implements KeyListener, ActionListener, MouseListene
 
     private void nextLevel(int lv) {
         model.setBricks(Level.getListBricks(lv));
-        model.setTime(Level.getTime(lv));
-        model.setIndexBackgroundImage(lv);
+        model.setRemainingTime(Level.getTime(lv));
+        model.setSelectedBackgroundImageIndex(lv);
     }
 
     private void win() {
         sound("win");
-        this.resetGame();
+        this.resetList();
         model.getPaddle().reset();
         model.setRunning(false);
         model.setNextLevel(true);
@@ -86,7 +85,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
         this.timer.stop();
     }
 
-    private void resetGame() {
+    private void resetList() {
         model.getItems().clear();
         model.getBricks().clear();
         model.getBalls().clear();
@@ -107,33 +106,21 @@ public class GameController implements KeyListener, ActionListener, MouseListene
     private void itemEventHandler(Item item) {
         sound(item.getSoundName());
         switch (item.getType()) {
-            case BOMB -> {
-                model.getBalls().clear();
-            }
-            case EXTRA_LIFE -> {
-                model.extraLife();
-            }
+            case BOMB -> model.getBalls().clear();
+            case EXTRA_LIFE -> model.extraLife();
             case FIRE_BALL -> {
                 Ball ball = model.getBalls().get((int) (Math.random() * model.getBalls().size()));
                 ball.setFireBall(true);
                 ball.setFireBallTime(item.getTime());
             }
-            case KILL -> {
-                model.getBalls().remove((int) (Math.random() * model.getBalls().size()));
-            }
-            case LASER -> {
-                model.getPaddle().setLaserTime(item.getTime());
-            }
+            case KILL -> model.getBalls().remove((int) (Math.random() * model.getBalls().size()));
+            case LASER -> model.getPaddle().setLaserTime(item.getTime());
             case LONGER -> {
                 model.getPaddle().longer(0.3);
                 model.getPaddle().setLongerTime(item.getTime());
             }
-            case PLUS_FIVE -> {
-                model.increaseTime(5);
-            }
-            case PLUS_SIX -> {
-                model.increaseTime(6);
-            }
+            case PLUS_FIVE -> model.increaseTime(5);
+            case PLUS_SIX -> model.increaseTime(6);
             case PLUS_THREE -> {
                 Ball b1 = new Ball(item.getX(), item.getY() - 20, 20, 0, 6, UP, DOWN);
                 Ball b2 = new Ball(item.getX() - 20, item.getY() - 20, 20, 6, 6, DOWN, DOWN);
@@ -146,17 +133,15 @@ public class GameController implements KeyListener, ActionListener, MouseListene
                 model.getPaddle().shorter(0.3);
                 model.getPaddle().setShorterTime(item.getTime());
             }
-            case STAR -> {
-                model.increaseStar();
-            }
-            case TIMES_SIX -> {
-                System.out.println("update...");
-            }
+            case STAR -> model.increaseStar();
+            case TIMES_SIX -> System.out.println("update...");
             case TIMES_THREE -> {
                 List<Ball> list_tmp = new ArrayList<>();
                 for (Ball ball_tmp : model.getBalls()) {
-                    Ball ball1 = new Ball(ball_tmp.getX() + SIZE, ball_tmp.getY(), SIZE, 6, 6, UP, ball_tmp.getDirectionY());
-                    Ball ball2 = new Ball(ball_tmp.getX() - SIZE, ball_tmp.getY(), SIZE, 6, 6, DOWN, ball_tmp.getDirectionY());
+                    Ball ball1 = new Ball(ball_tmp.getX() + SIZE, ball_tmp.getY(), SIZE, 6, 6, UP,
+                            ball_tmp.getDirectionY());
+                    Ball ball2 = new Ball(ball_tmp.getX() - SIZE, ball_tmp.getY(), SIZE, 6, 6, DOWN,
+                            ball_tmp.getDirectionY());
                     list_tmp.add(ball1);
                     list_tmp.add(ball2);
                     if (list_tmp.size() > 15) {
@@ -165,9 +150,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
                 }
                 model.getBalls().addAll(list_tmp);
             }
-            case WALL -> {
-                model.getPaddle().setWallTime(item.getTime());
-            }
+            case WALL -> model.getPaddle().setWallTime(item.getTime());
             default -> {
             }
         }
@@ -321,8 +304,8 @@ public class GameController implements KeyListener, ActionListener, MouseListene
                 sound("ball");
             }
             if (model.getPaddle().isLaser()
-                    && model.getPaddle().getMidpoint() > brick.getLowerLeftCorner().x
-                    && model.getPaddle().getMidpoint() < brick.getLowerRightCorner().x) {
+                    && model.getPaddle().getMidpoint() >= brick.getLowerLeftCorner().x
+                    && model.getPaddle().getMidpoint() <= brick.getLowerRightCorner().x) {
                 brick.setVisible(false);
                 sound("laser");
             }
@@ -361,7 +344,7 @@ public class GameController implements KeyListener, ActionListener, MouseListene
     }
 
     private void checkResult() {
-        if (model.getTime() <= 0.0) {
+        if (model.getRemainingTime() <= 0.0) {
             this.endGame();
         }
 
@@ -414,15 +397,16 @@ public class GameController implements KeyListener, ActionListener, MouseListene
 
     @Override
     public void keyPressed(KeyEvent e) {
-        System.out.println(e.getKeyCode());
-        if (e.getKeyCode() == 32) {
-            if (model.isPause()) {
-                model.setPause(false);
+        if (e.getKeyCode() == 32 && model.isPlayingGame()) {
+            if (model.isPaused()) {
+                model.setPaused(false);
+                model.setRunning(true);
                 if (!timer.isRunning()) {
                     this.timer.start();
                 }
             } else {
-                model.setPause(true);
+                model.setPaused(true);
+                model.setRunning(false);
                 view.repaint();
                 if (timer.isRunning()) {
                     this.timer.stop();
@@ -443,29 +427,251 @@ public class GameController implements KeyListener, ActionListener, MouseListene
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (!model.isRunning() && model.getBalls().size() == 1) {
-            model.getBalls().get(0).setX(e.getX());
+        if (model.isPlayingGame()) {
+            if (!model.isRunning() && !model.isPaused() && model.getBalls().size() == 1) {
+                model.getBalls().get(0).setX(e.getX());
+            }
+            if (!model.isPaused() && !model.isGameOver()) {
+                model.getPaddle().setX(e.getX());
+            }
+
+            if (model.isPaused()) {
+                for (ButtonGame button2 : model.getGameControlButtons()) {
+                    if (button2.getType().equals(ButtonType.GAME_CONTROL_PAUSE)) {
+                        button2.setHover(checkHover(e.getX(), e.getY(), button2));
+                    }
+                }
+            } else if (model.isGameOver()) {
+                for (ButtonGame button2 : model.getGameControlButtons()) {
+                    if (button2.getType().equals(ButtonType.GAME_CONTROL_LOST)) {
+                        button2.setHover(checkHover(e.getX(), e.getY(), button2));
+                    }
+                }
+            }
+
+        } else if (model.isMainMenu()) {// Hover button menu
+            for (ButtonGame button2 : model.getButtonsMainMenu()) {
+                button2.setHover(checkHover(e.getX(), e.getY(), button2));
+            }
+
+        } else if (model.isShop()) {// Hover button shop
+            for (ButtonGame button2 : model.getButtonShop()) {
+                if (model.isShoppingForBall()) {
+                    if (!button2.getType().equals(ButtonType.SHOP_PADDLE)) {// Nếu ở trang bán bóng thì không cho paddle hover
+                        button2.setHover(checkHover(e.getX(), e.getY(), button2));
+                    }
+                } else {
+                    if (!button2.getType().equals(ButtonType.SHOP_BALLS)) {// Ngược lại
+                        button2.setHover(checkHover(e.getX(), e.getY(), button2));
+                    }
+                }
+            }
+
+        } else if (model.isInfo()) {// Hover info
+            for (ButtonGame button2 : model.getButtonInfo()) {
+                button2.setHover(checkHover(e.getX(), e.getY(), button2));
+            }
         }
-        model.getPaddle().setX(e.getX());
+    }
+
+    private boolean checkHover(int x, int y, ButtonGame button2) {
+        return x >= button2.getX() && x <= button2.getX() + button2.getWidth()
+                && y >= button2.getY() && y <= button2.getY() + button2.getHeight();
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
         sound("click");
 
-        if (model.isNextLevel()) {
-            model.increaseLevel();// Tăng lv lên 1
-            nextLevel(model.getLevel());// Lấy ra list brick theo lv
-            addBall();// Thêm 1 quả bóng
-            model.setTim(3);// Cho tim về mặc định
-            model.setNextLevel(false);
-            sound("neutral");
-            return;
-        }
+        if (model.isPlayingGame()) {
+            if (model.isNextLevel()) {
+                startNewLevel();
+                return;
+            }
 
-        if (!model.isRunning()) {
-            model.setRunning(true);
+            if (!model.isRunning() && !model.isPaused() && model.isPlayingGame()) {
+                model.setRunning(true);
+            }
+
+            if (model.isPaused()) {
+                for (ButtonGame button2 : model.getGameControlButtons()) {
+                    if (button2.getType().equals(ButtonType.GAME_CONTROL_PAUSE)) {
+                        selected(button2);
+                    }
+                }
+            } else if (model.isGameOver()) {
+                for (ButtonGame button2 : model.getGameControlButtons()) {
+                    if (button2.getType().equals(ButtonType.GAME_CONTROL_LOST)) {
+                        selected(button2);
+                    }
+                }
+            }
+
+        } else if (model.isMainMenu()) {
+            for (ButtonGame button2 : model.getButtonsMainMenu()) {
+                selected(button2);
+            }
+
+        } else if (model.isShop()) {
+            for (ButtonGame button2 : model.getButtonShop()) {
+                if (button2.isHover()) {
+                    button2.setSelect(true);
+                    shopHandle(button2);
+                } else {
+                    if (!button2.getType().equals(ButtonType.SHOP_CONTROL)) {
+                        button2.setSelect(false);
+                    }
+                }
+            }
+
+        } else if (model.isInfo()) {
+            for (ButtonGame button2 : model.getButtonInfo()) {
+                selected(button2);
+            }
         }
+    }
+
+    private void shopHandle(ButtonGame button) {
+        try {
+            if (button.getType().equals(ButtonType.SHOP_BALLS)) {
+                if (!model.getBallImageStatus()[button.getImg2().getIndex()]) {
+                    int price = model.getBallImagePrice()[button.getImg2().getIndex()];
+                    // Hiển thị cửa sổ xác nhận
+                    int choice = JOptionPane.showConfirmDialog(null, "Bạn có muốn mua với giá " + price + " sao không?", "Xác nhận",
+                            JOptionPane.YES_NO_OPTION);
+                    // Kiểm tra lựa chọn của người dùng
+                    if (choice == JOptionPane.YES_OPTION) {
+                        if (model.getStar() >= price) {
+                            model.setStar(model.getStar() - price);
+                            model.getBallImageStatus()[button.getImg2().getIndex()] = true;
+                            JOptionPane.showMessageDialog(null, "Chúc mừng bạn đã mua thành công.");
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Bạn chưa có đủ tiền.");
+                        }
+                    }
+                } else {
+                    model.setSelectedBallImageIndex(button.getImg2().getIndex());
+                }
+            } else if (button.getType().equals(ButtonType.SHOP_PADDLE)) {
+                if (!model.getPaddleImageStatus()[button.getImg2().getIndex()]) {
+                    int price = model.getPaddleImagePrice()[button.getImg2().getIndex()];
+                    // Hiển thị cửa sổ xác nhận
+                    int choice = JOptionPane.showConfirmDialog(null, "Bạn có muốn mua với giá " + price + " sao không?", "Xác nhận",
+                            JOptionPane.YES_NO_OPTION);
+                    // Kiểm tra lựa chọn của người dùng
+                    if (choice == JOptionPane.YES_OPTION) {
+                        if (model.getStar() >= price) {
+                            model.setStar(model.getStar() - price);
+                            model.getPaddleImageStatus()[button.getImg2().getIndex()] = true;
+                            JOptionPane.showMessageDialog(null, "Chúc mừng bạn đã mua thành công.");
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Bạn chưa có đủ tiền.");
+                        }
+                    }
+                } else {
+                    model.setSelectedPaddleImageIndex(button.getImg2().getIndex());
+                }
+
+            } else if (button.getType().equals(ButtonType.CLOSE)) {
+                model.setClose();
+
+            } else if (button.getType().equals(ButtonType.SHOP_CONTROL)) {
+                if (button.getName().equals("ShoppingForBall")) {
+                    model.setShoppingForBall(true);
+                    model.getShopButtons().get(1).setSelect(false);
+                } else {
+                    model.setShoppingForBall(false);
+                    model.getShopButtons().get(0).setSelect(false);
+                }
+            }
+        } catch (HeadlessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void selected(ButtonGame button2) {
+        if (button2.isHover()) {
+            button2.setSelect(true);
+            buttonsHandle(button2);
+        } else {
+            button2.setSelect(false);
+        }
+    }
+
+    private void buttonsHandle(ButtonGame button2) {
+        switch (button2.getName().toLowerCase()) {
+            case "play" -> model.setPlayGame();
+            case "options" -> model.setShop();
+            case "quests" -> model.setInfo();
+            case "close" -> model.setClose();
+            case "link" -> model.browse("https://youtu.be/dQw4w9WgXcQ");
+            case "restart" -> restartGame();
+            case "sound on", "sound off" -> {
+                model.setMusicOn(!model.isMusicOn());
+                if (model.isMusicOn()) {
+                    button2.setName("Sound on");
+                } else {
+                    button2.setName("Sound off");
+                }
+                view.repaint();
+            }
+            case "next level" -> this.skipCurrentLevel();
+            case "resume" -> {
+                model.setPaused(false);
+                model.setRunning(true);
+                if (!timer.isRunning()) {
+                    timer.start();
+                }
+            }
+            case "home" -> {
+                model.setHome();
+                if (!timer.isRunning()) {
+                    timer.start();
+                }
+            }
+        }
+    }
+
+    private void skipCurrentLevel() {
+        if (model.getStar() >= model.getNextLevelPrice()) {
+            model.setRunning(false);
+            this.resetList();
+            model.getPaddle().reset();
+            model.setGameOver(false);
+            model.setPaused(false);
+            this.startNewLevel();
+            if (!timer.isRunning()) {
+                timer.start();
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "Bạn chưa có đủ tiền.");
+        }
+    }
+
+    private void restartGame() {
+        this.resetList();
+        addBall();// Thêm 1 quả bóng
+        nextLevel(model.getLevel());// Lấy ra list brick theo lv
+
+        model.getPaddle().reset();
+        model.setRunning(false);
+        model.setTim(3);// Cho tim về mặc định
+        model.setPaused(false);
+        model.setGameOver(false);
+        if (!timer.isRunning()) {
+            timer.start();
+        }
+    }
+
+    private void startNewLevel() {
+        model.increaseLevel();// Tăng lv lên 1
+        nextLevel(model.getLevel());// Lấy ra list brick theo lv
+        addBall();// Thêm 1 quả bóng
+        model.setTim(3);// Cho tim về mặc định
+        model.setNextLevel(false);
+        model.setPaused(false);
+        model.setGameOver(false);
+        sound("neutral");
     }
 
     @Override

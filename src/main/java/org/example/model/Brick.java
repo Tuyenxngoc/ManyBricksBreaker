@@ -66,52 +66,12 @@ public class Brick {
         return isVisible;
     }
 
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    public void setWidth(int width) {
-        this.width = width;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
-    }
-
     public void setVisible(boolean visible) {
         isVisible = visible;
     }
 
     public Item getItem() {
         return item;
-    }
-
-    public void setItem(Item item) {
-        this.item = item;
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public void setCount(int count) {
-        this.count = count;
-    }
-
-    public void setImage(Image image) {
-        this.image = image;
-    }
-
-    public int getXUpperLeftCorner() {
-        return this.x - width / 2;
-    }
-
-    public int getYUpperLeftCorner() {
-        return this.y - height / 2;
     }
 
     public Point getUpperLeftCorner() {

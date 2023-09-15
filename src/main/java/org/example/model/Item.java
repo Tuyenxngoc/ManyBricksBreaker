@@ -3,9 +3,9 @@ package org.example.model;
 import java.awt.*;
 
 public class Item {
-    private int x;
+    private final int x;
     private int y;
-    private ItemType type;
+    private final ItemType type;
     private boolean isVisible;
     private Image icon;
     private int time;
@@ -22,49 +22,32 @@ public class Item {
 
     private void setIcon(ItemType type) {
         switch (type) {
-            case BOMB -> {
-                this.icon = GameModel.iconItem[0];
-            }
-            case EXTRA_LIFE -> {
-                this.icon = GameModel.iconItem[1];
-            }
+            case BOMB -> this.icon = GameModel.iconItem[0];
+            case EXTRA_LIFE -> this.icon = GameModel.iconItem[1];
             case FIRE_BALL -> {
                 this.time = 5;
+                this.soundName = "fire_destroy";
                 this.icon = GameModel.iconItem[2];
             }
-            case KILL -> {
-                this.icon = GameModel.iconItem[3];
-            }
+            case KILL -> this.icon = GameModel.iconItem[3];
             case LASER -> {
-                this.time = 3;
+                this.time = 2;
                 this.icon = GameModel.iconItem[4];
             }
             case LONGER -> {
                 this.time = 10;
                 this.icon = GameModel.iconItem[6];
             }
-            case PLUS_FIVE -> {
-                this.icon = GameModel.iconItem[7];
-            }
-            case PLUS_SIX -> {
-                this.icon = GameModel.iconItem[8];
-            }
-            case PLUS_THREE -> {
-                this.icon = GameModel.iconItem[9];
-            }
+            case PLUS_FIVE -> this.icon = GameModel.iconItem[7];
+            case PLUS_SIX -> this.icon = GameModel.iconItem[8];
+            case PLUS_THREE -> this.icon = GameModel.iconItem[9];
             case SHORTER -> {
                 this.time = 10;
                 this.icon = GameModel.iconItem[10];
             }
-            case STAR -> {
-                this.icon = GameModel.iconItem[11];
-            }
-            case TIMES_SIX -> {
-                this.icon = GameModel.iconItem[12];
-            }
-            case TIMES_THREE -> {
-                this.icon = GameModel.iconItem[13];
-            }
+            case STAR -> this.icon = GameModel.iconItem[11];
+            case TIMES_SIX -> this.icon = GameModel.iconItem[12];
+            case TIMES_THREE -> this.icon = GameModel.iconItem[13];
             case WALL -> {
                 this.time = 10;
                 this.icon = GameModel.iconItem[14];
@@ -77,25 +60,15 @@ public class Item {
         return x;
     }
 
-    public void setX(int x) {
-        this.x = x;
-    }
-
     public int getY() {
         return y;
     }
 
-    public void setY(int y) {
-        this.y = y;
-    }
 
     public ItemType getType() {
         return type;
     }
 
-    public void setType(ItemType type) {
-        this.type = type;
-    }
 
     public boolean isVisible() {
         return isVisible;
@@ -109,9 +82,6 @@ public class Item {
         return icon;
     }
 
-    public void setIcon(Image icon) {
-        this.icon = icon;
-    }
 
     public void increaseY() {
         if (this.y < GameModel.HEIGHT) {
@@ -123,15 +93,9 @@ public class Item {
         return time;
     }
 
-    public void setTime(int time) {
-        this.time = time;
-    }
 
     public String getSoundName() {
         return soundName;
     }
 
-    public void setSoundName(String soundName) {
-        this.soundName = soundName;
-    }
 }
